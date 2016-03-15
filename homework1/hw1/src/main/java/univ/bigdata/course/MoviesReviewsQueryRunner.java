@@ -3,18 +3,36 @@ package univ.bigdata.course;
 import univ.bigdata.course.providers.FileIOMoviesProvider;
 import univ.bigdata.course.providers.MoviesProvider;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 
 public class MoviesReviewsQueryRunner {
 
     public static void main(String[] args) {
 
-        //TODO: Here you need to add the part of reading input parameters
-        // opening stream for writing the output and validating.
+    	PrintStream outFile = null;
 
-        final PrintStream printer = null;
+    	if (args.length != 2) {
+        	System.out.println("invalid arguments" + args);
+        	return;
+        }
+        
+		try {
+			outFile = new PrintStream (new File(args[1]));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+        	
+        final PrintStream printer = outFile;
         try{
-            final MoviesProvider provider = new FileIOMoviesProvider();
+            final MoviesProvider provider = new FileIOMoviesProvider(args[0]);
             final IMoviesStorage storage = new MoviesStorage(provider);
 
             printer.println("Getting list of total movies average.");
