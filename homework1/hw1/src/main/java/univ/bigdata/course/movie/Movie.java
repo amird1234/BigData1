@@ -37,5 +37,6 @@ public class Movie {
                 ", score=" + score +
                 '}';
     }
+    
 
 }
