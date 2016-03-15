@@ -7,6 +7,7 @@ import univ.bigdata.course.movie.Movie;
 import univ.bigdata.course.movie.MovieReview;
 
 public class FileIOMoviesProvider implements MoviesProvider {
+	
 	String inputFile = null;
 	HashMap<String, MovieReview> reviews = null;
 	HashMap<String, Movie> movies = null;
