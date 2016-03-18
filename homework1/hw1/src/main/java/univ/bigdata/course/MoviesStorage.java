@@ -20,10 +20,11 @@ import java.util.Map;
  * 7. K most helpful users
  */
 public class MoviesStorage implements IMoviesStorage {
-
+	MoviesProvider localProvider;
+	
     public MoviesStorage(final MoviesProvider provider) {
         //TODO: read movies using provider interface
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+       this.localProvider = provider;
     }
 
     @Override
