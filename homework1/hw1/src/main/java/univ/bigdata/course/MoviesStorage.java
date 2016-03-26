@@ -100,7 +100,7 @@ public class MoviesStorage implements IMoviesStorage {
     	List<Movie> returnedList;
     	int totalNum,i,perNum;
     	returnedList = new ArrayList<>();
-
+ 
     	totalList = getMoviesAverage();
 
     	totalList.sort(new MovieScoreComparator());
