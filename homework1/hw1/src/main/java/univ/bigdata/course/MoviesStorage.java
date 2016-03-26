@@ -98,7 +98,21 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public List<Movie> getMoviesPercentile(double percentile) {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	List<Movie> totalList;
+    	List<Movie> returnedList;
+    	int totalNum,i,perNum;
+    	returnedList = new ArrayList<>();
+ 
+    	totalList = getMoviesAverage();
+
+    	totalList.sort(new MovieScoreComparator());
+    	totalNum = totalList.size();
+    	perNum = totalNum - (int)((percentile/100)*totalNum);
+    	for(i=0; i < perNum; i++)
+    	{
+    		returnedList.add(totalList.get(i));
+    	}
+    	return returnedList;
     }
 
     @Override
@@ -148,7 +162,7 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public String mostPopularMovieReviewedByKUsers(int numOfUsers) {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
     @Override
