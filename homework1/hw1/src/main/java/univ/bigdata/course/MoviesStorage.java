@@ -7,6 +7,7 @@ import univ.bigdata.course.providers.MoviesProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 import comparators.MovieReviewComparator;
 import comparators.MovieScoreComparator;
+import univ.bigdata.course.movie.User;
 
 /**
  * Main class which capable to keep all information regarding movies review.
@@ -151,7 +153,20 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public Map<String, Long> moviesReviewWordsCount(int topK) {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	Map<String, Long> tmpWordsCount = new LinkedHashMap<String, Long>(); // a hash table that translates Word -> #Of Occurrences(Word)
+
+    	while (localProvider.hasMovie()) {
+			MovieReview mr = localProvider.getMovie();
+			String[] summaryTokens = mr.getSummary().split(" ");
+			for (String token: summaryTokens) {
+				if (tmpWordsCount.containsKey(token)) {
+					tmpWordsCount.put(token, tmpWordsCount.get(token) +1);
+				} else {
+					tmpWordsCount.put(token, (long) 1);
+				}
+			}
+		}
+    	return tmpWordsCount;
     }
 
     @Override
@@ -161,12 +176,56 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public Map<String, Double> topKHelpfullUsers(int k) {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+		Map<String, Double> tmpTopKHelpfullUsers = new LinkedHashMap<String, Double>();
+		List<User> usersList = new ArrayList<>();
+
+		// go over all movies and add all users one by one.
+		while (localProvider.hasMovie()) {
+			MovieReview mr = localProvider.getMovie();
+			if (mr != null) {
+				
+				// if movie already exist in hash map.
+				if (tmpTopKHelpfullUsers.containsKey(mr.getUserId())) {
+					tmpTopKHelpfullUsers.put(mr.getUserId(), tmpTopKHelpfullUsers.get(mr.getUserId()) + 1);					
+				} else {
+					tmpTopKHelpfullUsers.put(mr.getUserId(), (double) 1);
+				}
+			}
+		}
+
+		// sort the reviewers by number of reviews
+		Collections.sort(usersList, new Comparator<User>() {
+			public int compare(User o1, User o2) {
+				return o1.getNumOfReviews() > o2.getNumOfReviews() ? 1 : o1.getNumOfReviews() == o2.getNumOfReviews() ? 0 : -1;
+			}
+		});
+
+		// reduce list to only top K reviewers
+		usersList = usersList.subList(0, k - 1);
+
+		// sort the top K reviewers by userID
+		Collections.sort(usersList, new Comparator<User>() {
+			public int compare(User o1, User o2) {
+				return o1.getUserID().compareTo(o2.getUserID()) > 0 ? -1 : o1.getUserID().equals(o2.getUserID()) ? 0 : 1;
+			}
+		});
+
+		// translate List into a Map
+		for (User user : usersList) {
+			tmpTopKHelpfullUsers.put(user.getUserID(), user.getNumOfReviews());
+		}
+
+		return tmpTopKHelpfullUsers;
     }
 
     @Override
     public long moviesCount() {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	long numOfMovies = 0;
+    	while(localProvider.hasMovie()){
+         	MovieReview mr = localProvider.getMovie();
+         	numOfMovies++;
+         }
+    	return numOfMovies; 
     }
     
     /***
