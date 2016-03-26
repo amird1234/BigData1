@@ -96,7 +96,21 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public List<Movie> getMoviesPercentile(double percentile) {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	List<Movie> totalList;
+    	List<Movie> returnedList;
+    	int totalNum,i,perNum;
+    	returnedList = new ArrayList<>();
+
+    	totalList = getMoviesAverage();
+
+    	totalList.sort(new MovieScoreComparator());
+    	totalNum = totalList.size();
+    	perNum = totalNum - (int)((percentile/100)*totalNum);
+    	for(i=0; i < perNum; i++)
+    	{
+    		returnedList.add(totalList.get(i));
+    	}
+    	return returnedList;
     }
 
     @Override
@@ -146,7 +160,50 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public String mostPopularMovieReviewedByKUsers(int numOfUsers) {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	List<MovieForAverage> movieList = new ArrayList<>();
+   	 	List<MovieForAverage> KUsersList = new ArrayList<>();
+    	HashMap<String, MovieForAverage> aveMap = new HashMap<>();
+    	int i;
+   	 	String mostPopularMovie="";
+   	 	double maxAvg = 0;
+    	 while(localProvider.hasMovie()){
+         	MovieReview mr = localProvider.getMovie();
+         	if(mr != null){
+         		MovieForAverage movForAve = aveMap.get(mr.getMovie().getProductId());
+         		//if movie already exist in hash map.
+         		if(movForAve != null){
+         			//update movie number of reviews.
+         			movForAve.incNumOfReviews();
+         		}else{
+         			//create a new MovieForAverage instance and add it to HashMap.
+         			movForAve = new MovieForAverage(mr.getMovie().getProductId(), mr.getMovie().getScore());
+         			movForAve.incNumOfReviews();
+         			aveMap.put(mr.getMovie().getProductId(), movForAve);
+         		}
+         	}
+         }
+    	 //Goes over all the movies, calculates their average and adds them to the returned list.
+    	 for (MovieForAverage value : aveMap.values()) {
+    		 // MovieForAverage tempM = new MovieForAverage(value.getProductId(), value.getAverage());
+    		    movieList.add(value);
+    	 }
+    	 //KUsersList contains all movies with at least K reviews
+    	 for(i=0 ; i<movieList.size() ; i++)
+    	 {
+    		 if((new Long(movieList.get(i).getNumOfReviews())) >= numOfUsers)
+    		 {
+    			 KUsersList.add(movieList.get(i));
+    		 }
+    	 }
+    	 //find most popular movie from KUsersList
+    	 for(i=0 ; i<KUsersList.size(); i++)
+    	 {
+    		 if(KUsersList.get(i).getAverage() > maxAvg)
+    		 {
+    			 mostPopularMovie = KUsersList.get(i).getProductId();
+    		 }
+    	 }
+    	 return mostPopularMovie; 
     }
 
     @Override

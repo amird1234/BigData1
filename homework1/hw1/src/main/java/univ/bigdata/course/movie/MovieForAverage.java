@@ -25,10 +25,6 @@ public class MovieForAverage extends Movie{
 	}
 	
 	public double getAverage(){
-		if(super.getProductId().equals("B00004CK40")){
-			String s = "This";
-			s = s+"1";
-		}
 		return super.getScore()/numOfReviews;
 	}
 }
