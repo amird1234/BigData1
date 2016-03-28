@@ -162,7 +162,32 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public String mostPopularMovieReviewedByKUsers(int numOfUsers) {
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	List<Movie> movieList = getMoviesAverage();
+    	List<Movie> movieListFinal = new ArrayList<>();
+    	int total = movieList.size(), i;
+    	//all movies
+    	Map<String, Long> movieRCount = reviewCountPerMovieTopKMovies(total);
+    	//only movies with at least numOfUsers reviews.
+    	Map<String, Long> movienumOfUsersCount = new LinkedHashMap<>();
+    	Iterator<Entry<String, Long>> entries = movieRCount.entrySet().iterator();
+    	while (entries.hasNext()) 
+    	{
+    	    Map.Entry<String, Long> entry = (Map.Entry<String, Long>) entries.next();
+    	    if(entry.getValue() >= numOfUsers)
+    	    {
+    	    	movienumOfUsersCount.put(entry.getKey(), entry.getValue());
+    	    }
+    	}
+    	//find movie with max average
+    	for(i=0 ; i<total; i++)
+    	{
+    		if(movienumOfUsersCount.containsKey(movieList.get(i).getProductId()))
+    		{
+    			movieListFinal.add(movieList.get(i));
+    		}
+    	}
+    	movieListFinal.sort(new MovieScoreComparator());
+    	return movieListFinal.get(0).getProductId(); 
     }
 
     @Override
