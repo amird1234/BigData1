@@ -190,46 +190,51 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public Map<String, Double> topKHelpfullUsers(int k) {
-		Map<String, Double> tmpTopKHelpfullUsers = new LinkedHashMap<String, Double>();
+		Map<String, User> tmpTopKHelpfullUsers = new LinkedHashMap<String, User>();
+		Map<String, Double> tmpTopKHelpfullUsersRetVal = new LinkedHashMap<String, Double>();
 		List<User> usersList = new ArrayList<>();
 
 		// go over all movies and add all users one by one.
 		while (localProvider.hasMovie()) {
 			MovieReview mr = localProvider.getMovie();
 			if (mr != null) {
-				
 				// if movie already exist in hash map.
 				if (tmpTopKHelpfullUsers.containsKey(mr.getUserId())) {
-					tmpTopKHelpfullUsers.put(mr.getUserId(), tmpTopKHelpfullUsers.get(mr.getUserId()) + 1);					
+					tmpTopKHelpfullUsers.get(mr.getUserId()).incNumOfReviews();
 				} else {
-					tmpTopKHelpfullUsers.put(mr.getUserId(), (double) 1);
+					User user = new User(mr.getUserId(), 1.0);
+					tmpTopKHelpfullUsers.put(mr.getUserId(), user);
 				}
 			}
+		}
+
+		// move all users to a list so we'll be able to sort them
+		for (User user : tmpTopKHelpfullUsers.values()) {
+			usersList.add(user);
 		}
 
 		// sort the reviewers by number of reviews
 		Collections.sort(usersList, new Comparator<User>() {
 			public int compare(User o1, User o2) {
-				return o1.getNumOfReviews() > o2.getNumOfReviews() ? 1 : o1.getNumOfReviews() == o2.getNumOfReviews() ? 0 : -1;
+				Integer ageDiff = o2.getNumOfReviews().compareTo(o1.getNumOfReviews());
+				if (ageDiff == 0) {
+					return o1.getUserID().compareTo(o2.getUserID());
+				} else {
+
+					return ((ageDiff > 0) ? 1 : -1);
+				}
 			}
 		});
 
 		// reduce list to only top K reviewers
-		usersList = usersList.subList(0, k - 1);
-
-		// sort the top K reviewers by userID
-		Collections.sort(usersList, new Comparator<User>() {
-			public int compare(User o1, User o2) {
-				return o1.getUserID().compareTo(o2.getUserID()) > 0 ? -1 : o1.getUserID().equals(o2.getUserID()) ? 0 : 1;
-			}
-		});
+		usersList = usersList.subList(0, java.lang.Math.min(k, usersList.size()));
 
 		// translate List into a Map
 		for (User user : usersList) {
-			tmpTopKHelpfullUsers.put(user.getUserID(), user.getNumOfReviews());
+			tmpTopKHelpfullUsersRetVal.put(user.getUserID(), user.getNumOfReviews());
 		}
 
-		return tmpTopKHelpfullUsers;
+		return tmpTopKHelpfullUsersRetVal;
     }
 
     @Override
