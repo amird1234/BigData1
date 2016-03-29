@@ -193,20 +193,27 @@ public class MoviesStorage implements IMoviesStorage {
     @Override
     public Map<String, Long> moviesReviewWordsCount(int topK) {
     	//count movies
-    	int movies = getMoviesAverage().size();
+    	long movies =  moviesCount();
     	//Compute words count map for all the movies. Map includes top K words.
-    	return topYMoviewsReviewTopXWordsCount(movies,topK);
+    	return topYMoviewsReviewTopXWordsCountLong(movies,topK);
     }
-
-    @Override
-    public Map<String, Long> topYMoviewsReviewTopXWordsCount(int topMovies, int topWords) {
-        Map<String, Long> tmpTopYMoviewsReviewWordsCount = new LinkedHashMap<String, Long>();
+    /**
+     * Help function get long topMovies instead of int.
+     * and compute map that define at topYMoviewsReviewTopXWordsCount
+     * (Compute words count map for top Y most reviewed movies. Map includes top K words.)
+     *
+     * @param topMovies - number of top review movies (long)
+     * @param topWords - number of top words to return
+     * @return - map of words to count, ordered by count in decreasing order.
+     */
+    public Map<String, Long> topYMoviewsReviewTopXWordsCountLong(long topMovies, int topWords) {
+    	Map<String, Long> tmpTopYMoviewsReviewWordsCount = new LinkedHashMap<String, Long>();
     	Map<String, Long> sortedMap = new LinkedHashMap<String, Long>();
     	List<Movie> tempMovieList = new ArrayList<>();
     	List<String> tempTopKMovieNameList = new ArrayList<>();										
     	tempMovieList = getMoviesAverage();
     	tempMovieList.sort(new MovieScoreComparator());
-    	int n = topMovies;
+    	long n = topMovies;
     	if(tempMovieList.size()<topMovies){
     		n = tempMovieList.size();
     	}
@@ -266,6 +273,11 @@ public class MoviesStorage implements IMoviesStorage {
     	
         return tmpTopYMoviewsReviewWordsCount;
     }
+    
+    @Override
+    public Map<String, Long> topYMoviewsReviewTopXWordsCount(int topMovies, int topWords) {
+        return topYMoviewsReviewTopXWordsCountLong((long)topMovies, topWords);
+    }
 
     @Override
     public Map<String, Double> topKHelpfullUsers(int k) {
@@ -314,9 +326,13 @@ public class MoviesStorage implements IMoviesStorage {
     @Override
     public long moviesCount() {
     	long numOfMovies = 0;
+    	List<String> moviesID = new ArrayList<>();
     	while(localProvider.hasMovie()){
          	MovieReview mr = localProvider.getMovie();
-         	numOfMovies++;
+         	if(!moviesID.contains(mr.getMovie().getProductId())){
+         		moviesID.add(mr.getMovie().getProductId());
+         		numOfMovies++;
+         	}
          }
     	return numOfMovies; 
     }
