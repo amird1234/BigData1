@@ -5,17 +5,17 @@ import univ.bigdata.course.movie.MovieForAverage;
 import univ.bigdata.course.movie.MovieReview;
 import univ.bigdata.course.providers.MoviesProvider;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
-
+import java.util.Map.Entry;
 import comparators.MovieReviewComparator;
 import comparators.MovieScoreComparator;
 import univ.bigdata.course.movie.User;
@@ -192,25 +192,79 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public Map<String, Long> moviesReviewWordsCount(int topK) {
-    	Map<String, Long> tmpWordsCount = new LinkedHashMap<String, Long>(); // a hash table that translates Word -> #Of Occurrences(Word)
-
-    	while (localProvider.hasMovie()) {
-			MovieReview mr = localProvider.getMovie();
-			String[] summaryTokens = mr.getSummary().split(" ");
-			for (String token: summaryTokens) {
-				if (tmpWordsCount.containsKey(token)) {
-					tmpWordsCount.put(token, tmpWordsCount.get(token) +1);
-				} else {
-					tmpWordsCount.put(token, (long) 1);
-				}
-			}
-		}
-    	return tmpWordsCount;
+    	//count movies
+    	int movies = getMoviesAverage().size();
+    	//Compute words count map for all the movies. Map includes top K words.
+    	return topYMoviewsReviewTopXWordsCount(movies,topK);
     }
 
     @Override
     public Map<String, Long> topYMoviewsReviewTopXWordsCount(int topMovies, int topWords) {
-        throw new UnsupportedOperationException("You have to implement this method on your own.");
+        Map<String, Long> tmpTopYMoviewsReviewWordsCount = new LinkedHashMap<String, Long>();
+    	Map<String, Long> sortedMap = new LinkedHashMap<String, Long>();
+    	List<Movie> tempMovieList = new ArrayList<>();
+    	List<String> tempTopKMovieNameList = new ArrayList<>();										
+    	tempMovieList = getMoviesAverage();
+    	tempMovieList.sort(new MovieScoreComparator());
+    	int n = topMovies;
+    	if(tempMovieList.size()<topMovies){
+    		n = tempMovieList.size();
+    	}
+    	for(int i=0 ; i<n ; i++){
+    		tempTopKMovieNameList.add(tempMovieList.get(i).getProductId());
+    	}
+    	while (localProvider.hasMovie()) {
+			MovieReview mr = localProvider.getMovie();
+			String currentName = mr.getMovie().getProductId();
+			if(tempTopKMovieNameList.contains(currentName)){
+				//we want to count the words only in top y movies
+				String[] reviewTokens = mr.getReview().split(" ");
+				for (String token: reviewTokens) {
+					if (tmpTopYMoviewsReviewWordsCount.containsKey(token)) {
+						Long count = tmpTopYMoviewsReviewWordsCount.get(token) +1;
+						tmpTopYMoviewsReviewWordsCount.remove(token);
+						tmpTopYMoviewsReviewWordsCount.put(token, count);
+					} else {
+						tmpTopYMoviewsReviewWordsCount.put(token, (long) 1);
+					}
+				}
+			}
+		}
+		List<Map.Entry<String, Long>> list = 
+				new LinkedList<Map.Entry<String, Long>>(tmpTopYMoviewsReviewWordsCount.entrySet());
+		// Sort list by key
+		Collections.sort(list, new Comparator<Map.Entry<String, Long>>() {
+			public int compare(Map.Entry<String, Long> o1,
+                                           Map.Entry<String, Long> o2) {
+				return (o1.getKey()).compareTo(o2.getKey());
+			}
+		});
+		Collections.reverse(list);
+			// Sort list by value
+			Collections.sort(list, new Comparator<Map.Entry<String, Long>>() {
+				public int compare(Map.Entry<String, Long> o1,
+	                                           Map.Entry<String, Long> o2) {
+					return (o1.getValue()).compareTo(o2.getValue());
+				}
+			});
+			tmpTopYMoviewsReviewWordsCount.clear();
+			//reverse the sorted list
+			Collections.reverse(list);
+			// Convert sorted map back to a Map
+			for (Iterator<Map.Entry<String, Long>> it = list.iterator(); it.hasNext();) {
+				Map.Entry<String, Long> entry = it.next();
+				sortedMap.put(entry.getKey(), entry.getValue());
+			}
+    			int k = 0;
+    			for (Map.Entry<String, Long> entry : sortedMap.entrySet()) {
+    				//insert the top k words
+    				if(k<topWords){
+    					tmpTopYMoviewsReviewWordsCount.put(entry.getKey(), entry.getValue());
+    					k++;
+    				}
+    			}
+    	
+        return tmpTopYMoviewsReviewWordsCount;
     }
 
     @Override
@@ -293,7 +347,7 @@ public class MoviesStorage implements IMoviesStorage {
          }
     	 //Goes over all the movies, calculates their average and adds them to the returned list.
     	 for (MovieForAverage value : aveMap.values()) {
-    		    Movie tempM = new Movie(value.getProductId(), value.getAverage());
+    		    Movie tempM = new Movie(value.getProductId(), Double.parseDouble(new DecimalFormat("##.#####").format(value.getAverage())));
     		    returnedList.add(tempM);
     	 }
     	return returnedList; 
