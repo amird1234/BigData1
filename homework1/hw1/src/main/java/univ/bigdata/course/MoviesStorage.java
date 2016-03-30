@@ -84,7 +84,7 @@ public class MoviesStorage implements IMoviesStorage {
     	List<Movie> tempMovieList = new ArrayList<>();
     	tempMovieList = getMoviesAverage();
     	tempMovieList.sort(new MovieScoreComparator());
-    	for(i=0 ; i<topK ; i++){
+    	for(i=0 ; (i<topK) && (i<tempMovieList.size()) ; i++){
     		returnedList.add(tempMovieList.get(i));
     	}
     	return returnedList;
@@ -93,7 +93,11 @@ public class MoviesStorage implements IMoviesStorage {
     @Override
     public Movie movieWithHighestAverage() {
         List<Movie> movArray = getTopKMoviesAverage(1);
-        return movArray.get(0);
+        if(movArray.size()>0){
+        	return movArray.get(0);
+        }else{
+        	return null;
+        }
     }
 
     @Override
@@ -153,10 +157,11 @@ public class MoviesStorage implements IMoviesStorage {
     		    movieList.add(value);
     	 }
     	 movieList.sort(new MovieReviewComparator());
-    	 for(i=0 ; i<topK ; i++){
+    	 for(i=0 ; (i<topK) && (i<movieList.size()) ; i++){
     		 MovieForAverage tempMFA = movieList.get(i);
     		 returnedMap.put(tempMFA.getProductId(), (new Long(tempMFA.getNumOfReviews())));
     	 }
+    	 
     	return returnedMap; 
     }
 
