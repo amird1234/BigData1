@@ -2,6 +2,7 @@ package univ.bigdata.course.providers;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import univ.bigdata.course.movie.Movie;
@@ -32,12 +33,15 @@ public class FileIOMoviesProvider implements MoviesProvider {
 	public FileIOMoviesProvider(String inFile) {
 		
 		reviews = new ArrayList<>();
+		
+		URL url = this.getClass().getClassLoader().getResource ( inFile );
+		
 		String productId,userId,profileName,helpfulness,summary,review;
 		Date timestamp;
 		Double score;
 		
 		//open the input file.
-		try (BufferedReader br = new BufferedReader(new FileReader(inFile))) {	
+		try (BufferedReader br = new BufferedReader(new FileReader(url.getPath()))) {	
 		    String line;
 		    //Read all lines from input text file, one by one.
 		    while ((line = br.readLine()) != null) {
