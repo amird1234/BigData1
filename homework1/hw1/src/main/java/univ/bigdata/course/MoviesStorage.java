@@ -192,6 +192,9 @@ public class MoviesStorage implements IMoviesStorage {
     		}
     	}
     	movieListFinal.sort(new MovieScoreComparator());
+    	if(movieListFinal.isEmpty()){
+    		return null;
+    	}
     	return movieListFinal.get(0).getProductId(); 
     }
 
