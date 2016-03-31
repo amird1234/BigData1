@@ -1,5 +1,6 @@
 package univ.bigdata.course;
 
+import univ.bigdata.course.movie.MovieReview;
 import univ.bigdata.course.providers.FileIOMoviesProvider;
 import univ.bigdata.course.providers.MoviesProvider;
 
@@ -16,15 +17,19 @@ public class MoviesReviewsQueryRunner {
 
     public static void main(String[] args) {
 
+//    	File f = new File("Avner.txt");
     	PrintStream outFile = null;
-
-    	if (args.length != 2) {
-        	System.out.println("invalid arguments" + args);
-        	return;
-        }
-        
+    	System.out.println("invalid arguments" + args[0] + args[1]);
+//    	if (args.length != 2) {
+//        	System.out.println("invalid arguments" + args);
+//        	return;
+//        }
+//        
+    	String inputFile = args[0].split("=")[1];
+    	String outputFile = args[1].split("=")[1];
 		try {
-			outFile = new PrintStream (new File(args[1]));
+			outFile = new PrintStream (new File(outputFile));
+//			outFile = new PrintStream (new File("queries_out.txt"));
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -32,7 +37,8 @@ public class MoviesReviewsQueryRunner {
         	
         final PrintStream printer = outFile;
         try{
-            final MoviesProvider provider = new FileIOMoviesProvider(args[0]);
+            final MoviesProvider provider = new FileIOMoviesProvider(inputFile);
+//        	final MoviesProvider provider = new FileIOMoviesProvider("movies-sample.txt");
             final IMoviesStorage storage = new MoviesStorage(provider);
 
             printer.println("Getting list of total movies average.");
