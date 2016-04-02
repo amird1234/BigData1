@@ -107,16 +107,21 @@ public class MoviesStorage implements IMoviesStorage {
     	List<Movie> totalList;
     	List<Movie> returnedList;
     	int totalNum,i,perNum;
+    	
+    	if(percentile < 0 || percentile > 100)
+    		throw new RuntimeException();
+    	
     	returnedList = new ArrayList<>();
- 
     	totalList = getMoviesAverage();
-
-    	totalList.sort(new MovieScoreComparator());
-    	totalNum = totalList.size();
-    	perNum = totalNum - (int)((percentile/100)*totalNum);
-    	for(i=0; i < perNum; i++)
+    	if(!totalList.isEmpty())
     	{
-    		returnedList.add(totalList.get(i));
+    		totalList.sort(new MovieScoreComparator());
+    		totalNum = totalList.size();
+    		perNum = totalNum - (int)((percentile/100)*totalNum);
+    		for(i=0; i < perNum; i++)
+    		{
+    			returnedList.add(totalList.get(i));
+    		}
     	}
     	return returnedList;
     }
@@ -172,32 +177,49 @@ public class MoviesStorage implements IMoviesStorage {
     	List<Movie> movieList = getMoviesAverage();
     	List<Movie> movieListFinal = new ArrayList<>();
     	int total = movieList.size(), i;
+    	if(numOfUsers < 0)
+    		throw new RuntimeException();
     	//all movies
     	Map<String, Long> movieRCount = reviewCountPerMovieTopKMovies(total);
     	//only movies with at least numOfUsers reviews.
-    	Map<String, Long> movienumOfUsersCount = new LinkedHashMap<>();
-    	Iterator<Entry<String, Long>> entries = movieRCount.entrySet().iterator();
-    	while (entries.hasNext()) 
+    	if(!movieRCount.isEmpty())
     	{
-    	    Map.Entry<String, Long> entry = (Map.Entry<String, Long>) entries.next();
-    	    if(entry.getValue() >= numOfUsers)
-    	    {
-    	    	movienumOfUsersCount.put(entry.getKey(), entry.getValue());
-    	    }
-    	}
-    	//find movie with max average
-    	for(i=0 ; i<total; i++)
-    	{
-    		if(movienumOfUsersCount.containsKey(movieList.get(i).getProductId()))
+    		Map<String, Long> movienumOfUsersCount = new LinkedHashMap<>();
+    		Iterator<Entry<String, Long>> entries = movieRCount.entrySet().iterator();
+    		while (entries.hasNext()) 
     		{
-    			movieListFinal.add(movieList.get(i));
+    			Map.Entry<String, Long> entry = (Map.Entry<String, Long>) entries.next();
+    			if(entry.getValue() >= numOfUsers)
+    			{
+    				movienumOfUsersCount.put(entry.getKey(), entry.getValue());
+    			}
+    		}
+    		//find movie with max average
+    		if(!movienumOfUsersCount.isEmpty())
+    		{
+    			for(i=0 ; i<total; i++)
+    			{
+    				if(movienumOfUsersCount.containsKey(movieList.get(i).getProductId()))
+    				{
+    					movieListFinal.add(movieList.get(i));
+    				}
+    			}
+    		}
+    		else
+    		{
+    			return null;
     		}
     	}
-    	movieListFinal.sort(new MovieScoreComparator());
-    	if(movieListFinal.isEmpty()){
+    	else
+    	{
     		return null;
     	}
-    	return movieListFinal.get(0).getProductId(); 
+    	if(!movieListFinal.isEmpty())
+    	{
+    		movieListFinal.sort(new MovieScoreComparator());
+    		return movieListFinal.get(0).getProductId(); 
+    	}
+    	return null;
     }
 
     @Override
