@@ -62,6 +62,9 @@ public class MoviesStorage implements IMoviesStorage {
     public double totalMovieAverage(String productId) {
     	Double Average = 0.0;
     	Integer NumOfReviewForMovie = 0;
+    	if(productId == null){
+    		throw new RuntimeException();
+    	}
     	
     	//Sum all the scores for the specific movie
         while(localProvider.hasMovie()){
@@ -82,6 +85,9 @@ public class MoviesStorage implements IMoviesStorage {
     	int i;
     	List<Movie> returnedList = new ArrayList<>();
     	List<Movie> tempMovieList = new ArrayList<>();
+    	if((topK<0)){
+    		throw new RuntimeException();
+    	}
     	tempMovieList = getMoviesAverage();
     	tempMovieList.sort(new MovieScoreComparator());
     	for(i=0 ; (i<topK) && (i<tempMovieList.size()) ; i++){
@@ -135,6 +141,9 @@ public class MoviesStorage implements IMoviesStorage {
     	HashMap<String, MovieForAverage> aveMap = new HashMap<>();
     	Map<String, Long> returnedMap = new LinkedHashMap<>();
     	int i;
+    	if((topK<0)){
+    		throw new RuntimeException();
+    	}
     	 while(localProvider.hasMovie()){
          	MovieReview mr = localProvider.getMovie();
          	if(mr != null){
