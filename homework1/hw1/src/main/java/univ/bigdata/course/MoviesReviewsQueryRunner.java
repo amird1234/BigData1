@@ -1,3 +1,9 @@
+/*
+Avner Gidron; AvnerGidron1@gmail.com; 201533262
+Carmi Arlinsky; 4carmi@gmail.com; 029993904
+Samah Ghazawi; idrees.samah@gmail.com; 301416897
+Amir dahan; Amird1234@gmail.com; 039593801
+*/
 package univ.bigdata.course;
 
 import univ.bigdata.course.movie.MovieReview;
@@ -19,17 +25,17 @@ public class MoviesReviewsQueryRunner {
 
 //    	File f = new File("Avner.txt");
     	PrintStream outFile = null;
-    	System.out.println("invalid arguments" + args[0] + args[1]);
+    //	System.out.println("invalid arguments" + args[0] + args[1]);
 //    	if (args.length != 2) {
 //        	System.out.println("invalid arguments" + args);
 //        	return;
 //        }
 //        
-    	String inputFile = args[0].split("=")[1];
-    	String outputFile = args[1].split("=")[1];
+    //	String inputFile = args[0].split("=")[1]; //comment
+    //	String outputFile = args[1].split("=")[1]; //comment
 		try {
-			outFile = new PrintStream (new File(outputFile));
-//			outFile = new PrintStream (new File("queries_out.txt"));
+//			outFile = new PrintStream (new File(outputFile)); //comment
+		outFile = new PrintStream (new File("queries_out.txt")); // not comment
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -37,8 +43,8 @@ public class MoviesReviewsQueryRunner {
         	
         final PrintStream printer = outFile;
         try{
-            final MoviesProvider provider = new FileIOMoviesProvider(inputFile);
-//        	final MoviesProvider provider = new FileIOMoviesProvider("movies-sample.txt");
+        //    final MoviesProvider provider = new FileIOMoviesProvider(inputFile);//comment
+    	final MoviesProvider provider = new FileIOMoviesProvider("movies-sample.txt");// not comment
             final IMoviesStorage storage = new MoviesStorage(provider);
 
             printer.println("Getting list of total movies average.");
@@ -98,7 +104,7 @@ public class MoviesReviewsQueryRunner {
 
             // 9.
             printer.println();
-            printer.println("Most popular movie with highest average score, reviewed by at least 20 users " + storage.mostPopularMovieReviewedByKUsers(20));
+            printer.println("Most popular movie with highest average score, reviewed by at least 20 users " + storage.mostPopularMovieReviewedByKUsers(100));
             printer.println("Most popular movie with highest average score, reviewed by at least 15 users " + storage.mostPopularMovieReviewedByKUsers(15));
             printer.println("Most popular movie with highest average score, reviewed by at least 10 users " + storage.mostPopularMovieReviewedByKUsers(10));
             printer.println("Most popular movie with highest average score, reviewed by at least 5 users " + storage.mostPopularMovieReviewedByKUsers(5));

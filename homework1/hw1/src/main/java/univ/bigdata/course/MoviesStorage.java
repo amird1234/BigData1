@@ -1,3 +1,9 @@
+/*
+Avner Gidron; AvnerGidron1@gmail.com; 201533262
+Carmi Arlinsky; 4carmi@gmail.com; 029993904
+Samah Ghazawi; idrees.samah@gmail.com; 301416897
+Amir dahan; Amird1234@gmail.com; 039593801
+*/
 package univ.bigdata.course;
 
 import univ.bigdata.course.movie.Movie;
@@ -16,6 +22,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
+
 import comparators.MovieReviewComparator;
 import comparators.MovieScoreComparator;
 import univ.bigdata.course.movie.User;
@@ -111,16 +119,21 @@ public class MoviesStorage implements IMoviesStorage {
     	List<Movie> totalList;
     	List<Movie> returnedList;
     	int totalNum,i,perNum;
+    	
+    	if(percentile < 0 || percentile > 100)
+    		throw new RuntimeException();
+    	
     	returnedList = new ArrayList<>();
- 
     	totalList = getMoviesAverage();
-
-    	totalList.sort(new MovieScoreComparator());
-    	totalNum = totalList.size();
-    	perNum = totalNum - (int)((percentile/100)*totalNum);
-    	for(i=0; i < perNum; i++)
+    	if(!totalList.isEmpty())
     	{
-    		returnedList.add(totalList.get(i));
+    		totalList.sort(new MovieScoreComparator());
+    		totalNum = totalList.size();
+    		perNum = totalNum - (int)((percentile/100)*totalNum);
+    		for(i=0; i < perNum; i++)
+    		{
+    			returnedList.add(totalList.get(i));
+    		}
     	}
     	return returnedList;
     }
@@ -179,32 +192,49 @@ public class MoviesStorage implements IMoviesStorage {
     	List<Movie> movieList = getMoviesAverage();
     	List<Movie> movieListFinal = new ArrayList<>();
     	int total = movieList.size(), i;
+    	if(numOfUsers < 0)
+    		throw new RuntimeException();
     	//all movies
     	Map<String, Long> movieRCount = reviewCountPerMovieTopKMovies(total);
     	//only movies with at least numOfUsers reviews.
-    	Map<String, Long> movienumOfUsersCount = new LinkedHashMap<>();
-    	Iterator<Entry<String, Long>> entries = movieRCount.entrySet().iterator();
-    	while (entries.hasNext()) 
+    	if(!movieRCount.isEmpty())
     	{
-    	    Map.Entry<String, Long> entry = (Map.Entry<String, Long>) entries.next();
-    	    if(entry.getValue() >= numOfUsers)
-    	    {
-    	    	movienumOfUsersCount.put(entry.getKey(), entry.getValue());
-    	    }
-    	}
-    	//find movie with max average
-    	for(i=0 ; i<total; i++)
-    	{
-    		if(movienumOfUsersCount.containsKey(movieList.get(i).getProductId()))
+    		Map<String, Long> movienumOfUsersCount = new LinkedHashMap<>();
+    		Iterator<Entry<String, Long>> entries = movieRCount.entrySet().iterator();
+    		while (entries.hasNext()) 
     		{
-    			movieListFinal.add(movieList.get(i));
+    			Map.Entry<String, Long> entry = (Map.Entry<String, Long>) entries.next();
+    			if(entry.getValue() >= numOfUsers)
+    			{
+    				movienumOfUsersCount.put(entry.getKey(), entry.getValue());
+    			}
+    		}
+    		//find movie with max average
+    		if(!movienumOfUsersCount.isEmpty())
+    		{
+    			for(i=0 ; i<total; i++)
+    			{
+    				if(movienumOfUsersCount.containsKey(movieList.get(i).getProductId()))
+    				{
+    					movieListFinal.add(movieList.get(i));
+    				}
+    			}
+    		}
+    		else
+    		{
+    			return null;
     		}
     	}
-    	movieListFinal.sort(new MovieScoreComparator());
-    	if(movieListFinal.isEmpty()){
+    	else
+    	{
     		return null;
     	}
-    	return movieListFinal.get(0).getProductId(); 
+    	if(!movieListFinal.isEmpty())
+    	{
+    		movieListFinal.sort(new MovieScoreComparator());
+    		return movieListFinal.get(0).getProductId(); 
+    	}
+    	return null;
     }
 
     @Override
@@ -297,20 +327,46 @@ public class MoviesStorage implements IMoviesStorage {
     }
 
     @Override
+    /**
+     * Will calculate the top K helpful reviewers.
+     * top K helpful reviewers will be calculated using 2 keys:
+     * 1) helpfulness (sum of numerators / sum of denominators)
+     * 2) numOfReviews (of the user)
+     * 3) Lexicographically by userID.
+     * 
+     * Will return a Map (userID->numOfReviews), this map will be sorted using 2 keys:
+     * 1) helpfulness
+     * 2) numOfReviews (of the user)
+     * 3) Lexicographically by userID.
+     * 
+     * @param k
+     * @return
+     */
     public Map<String, Double> topKHelpfullUsers(int k) {
 		Map<String, User> tmpTopKHelpfullUsers = new LinkedHashMap<String, User>();
-		Map<String, Double> tmpTopKHelpfullUsersRetVal = new LinkedHashMap<String, Double>();
+		Map<String, Double> topKHelpfullUsersRetVal = new LinkedHashMap<String, Double>();
 		List<User> usersList = new ArrayList<>();
+		String[] helpfullness = null;
+		Integer numerator = 0, denominator = 0; 
 
 		// go over all movies and add all users one by one.
 		while (localProvider.hasMovie()) {
 			MovieReview mr = localProvider.getMovie();
 			if (mr != null) {
-				// if movie already exist in hash map.
+				// parse helpfulness into to strings, "/" separated
+				helpfullness = mr.getHelpfulness().split("/");
+				// parse string into an integer
+				numerator = Integer.parseInt(helpfullness[0]);
+				denominator = Integer.parseInt(helpfullness[1]);;
+
 				if (tmpTopKHelpfullUsers.containsKey(mr.getUserId())) {
-					tmpTopKHelpfullUsers.get(mr.getUserId()).incNumOfReviews();
+					// if user already exists in hash map, get a reference.
+					User user = tmpTopKHelpfullUsers.get(mr.getUserId());
+					user.incNumeratorDeniminator(numerator, denominator); //add helpful/total #reviews
+					user.incNumOfReviews(); // another review by an existing user, increment counter
 				} else {
-					User user = new User(mr.getUserId(), 1.0);
+					// first time we encounter this user, let's add it!
+					User user = new User(mr.getUserId(), numerator, denominator, 1);
 					tmpTopKHelpfullUsers.put(mr.getUserId(), user);
 				}
 			}
@@ -321,15 +377,15 @@ public class MoviesStorage implements IMoviesStorage {
 			usersList.add(user);
 		}
 
-		// sort the reviewers by number of reviews
-		Collections.sort(usersList, new Comparator<User>() {
+		usersList.removeIf(p -> p.isHelpfull() == false); 
+		// sort the reviewers by helpfulness, number of reviews, userID
+		usersList.sort(new Comparator<User>() {
 			public int compare(User o1, User o2) {
-				Integer ageDiff = o2.getNumOfReviews().compareTo(o1.getNumOfReviews());
-				if (ageDiff == 0) {
-					return o1.getUserID().compareTo(o2.getUserID());
+				Integer delta = o2.getHelpfullness().compareTo(o1.getHelpfullness());
+				if (delta == 0) {
+					return o1.getUserID().compareTo(o2.getUserID());	
 				} else {
-
-					return ((ageDiff > 0) ? 1 : -1);
+					return ((delta > 0) ? 1 : -1);
 				}
 			}
 		});
@@ -339,10 +395,10 @@ public class MoviesStorage implements IMoviesStorage {
 
 		// translate List into a Map
 		for (User user : usersList) {
-			tmpTopKHelpfullUsersRetVal.put(user.getUserID(), user.getNumOfReviews());
+			topKHelpfullUsersRetVal.put(user.getUserID(), user.getHelpfullness());
 		}
 
-		return tmpTopKHelpfullUsersRetVal;
+		return topKHelpfullUsersRetVal;
     }
 
     @Override
