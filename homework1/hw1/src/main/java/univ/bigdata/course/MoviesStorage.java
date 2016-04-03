@@ -62,6 +62,9 @@ public class MoviesStorage implements IMoviesStorage {
         		NumOfReviewForMovie++;
         	}
         }
+        if(NumOfReviewForMovie == 0){
+        	return 0;
+        }
         Average = Average/NumOfReviewForMovie;
         return Average;
     }
@@ -83,6 +86,9 @@ public class MoviesStorage implements IMoviesStorage {
         			NumOfReviewForMovie++;
         		}
         	}
+        }
+        if(NumOfReviewForMovie == 0){
+        	throw new RuntimeException();
         }
         Average = Average/NumOfReviewForMovie;
         return Average;
